@@ -5,7 +5,12 @@ import Chokidar = require("chokidar");
 
 import { toTry } from "@el3um4s/to-try";
 
-import { NameAPI, WatchFolderMessage, WatchFileMessage } from "./interfaces";
+import {
+  NameAPI,
+  WatchFolderMessage,
+  WatchFileMessage,
+  Changed,
+} from "./interfaces";
 
 const nameAPI: NameAPI = "chokidar";
 
@@ -18,19 +23,19 @@ const validSendChannel: SendChannels = {
 // from Main
 const validReceiveChannel: string[] = ["folderChanged", "fileChanged"];
 
-const chokidarAPI = new IPC({
+const chokidar = new IPC({
   nameAPI,
   validSendChannel,
   validReceiveChannel,
 });
 
-export default chokidarAPI;
+export default chokidar;
 
 const sendMessage = (
   watcher: Chokidar.FSWatcher,
   mainWindow: BrowserWindow,
   nameMessage: string,
-  message: { path: string; eventName: string; nameWatcher: string }
+  message: Changed
 ) => {
   const [ok, ko] = toTry(() =>
     mainWindow.webContents.send(nameMessage, message)

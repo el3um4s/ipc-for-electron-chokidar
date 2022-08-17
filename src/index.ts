@@ -1,6 +1,3 @@
-const myCustomFunction = (name: string):string => `Hello ${name}`;
-function ciao(name: string): string {
-    return `Ciao ${name}`;
-}
+import chokidar from "./IPC/chokidar";
 
-export { myCustomFunction, ciao};
+export default chokidar;

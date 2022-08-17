@@ -1,106 +1,199 @@
-# Typescript NPM Package Starter
-My template for creating npm packages using typescript.
+# IPC for Electron: Chokidar (NOT YET TESTED)
 
-- TS to JS
-- Testing via Jest, includes coverage
-- ESLint
-- Ignore files to ensure minimal code is stored/shipped
+Allow the renderer to use [chokidar](https://www.npmjs.com/package/chokidar) (Minimal and efficient cross-platform file watching library)
 
-NPM link: [@el3um4s/typescript-npm-package-starter](https://www.npmjs.com/package/@el3um4s/typescript-npm-package-starter)
+NPM link: [@el3um4s/ipc-for-electron-chokidar](https://www.npmjs.com/package/@el3um4s/ipc-for-electron-chokidar)
 
-### Getting Started
-
-To create a new project based on this template using degit:
-
-```bash
-npx degit el3um4s/typescript-npm-package-starter
-```
-
-Then install the dependencies with
-
-```bash
-npm install
-```
-
-Now update the name field in package.json with your desired package name. Then update the homepage field in package.json. And finally add your code.
-
-### Build the package
-
-Run
-
-```bash
-npm run build
-```
-
-### Test the package
-
-You can test the code with [Jest](https://jestjs.io/)
-
-```bash
-npm test
-```
-
-You can find the test coverage in `coverage/lcov-report/index.html`.
-
-### Check dependencies
-
-You can check and upgrade dependencies to the latest versions, ignoring specified versions. with [npm-check-updates](https://www.npmjs.com/package/npm-check-updates):
-
-```bash
-npm run check-updates
-```
-
-You can also use `npm run check-updates:minor` to update only patch and minor.
-
-Instead `npm run check-updates:patch` only updates patch.
-
-### Publish
-
-First commit the changes to GitHub. Then login to your [NPM](https://www.npmjs.com) account (If you don’t have an account you can do so on [https://www.npmjs.com/signup](https://www.npmjs.com/signup))
-
-```bash
-npm login
-```
-
-Then run publish:
-
-```bash
-npm publish
-```
-
-If you're using a scoped name use:
-
-```bash
-npm publish --access public
-```
-
-### Bumping a new version
-
-To update the package use:
-
-```bash
-npm version patch
-```
-
-and then
-
-```bash
-npm publish
-```
+Use [@el3um4s/ipc-for-electron](https://www.npmjs.com/package/@el3um4s/ipc-for-electron) and [@el3um4s/renderer-for-electron-chokidar](https://www.npmjs.com/package/@el3um4s/renderer-for-electron-chokidar) to allow communication between Electron and a web page
 
 ### Install and use the package
 
 To use the package in a project:
 
 ```bash
-npm i @el3um4s/typescript-npm-package-starter
+npm i @el3um4s/ipc-for-electron @el3um4s/ipc-for-electron-chokidar @el3um4s/renderer-for-electron-chokidar
 ```
 
-and then in a file:
+Then the `preload.ts` file:
 
 ```ts
-import { ciao } from "@el3um4s/typescript-npm-package-starter";
+import { generateContextBridge } from "@el3um4s/ipc-for-electron";
+import chokidar from "@el3um4s/ipc-for-electron-chokidar";
 
-const b = ciao("mondo");
-console.log(b); // Ciao Mondo
+const listAPI = [chokidar];
+
+generateContextBridge(listAPI);
+```
+
+In the renderer file:
+
+```ts
+import chokidar from "@el3um4s/renderer-for-electron-chokidar";
+
+chokidar.watchFolder({
+  folderPath: "./documents",
+  nameWatcher: "customNameWatcher",
+  apiKey: "my-api-key",
+  callback: (data) => {
+    const { path, eventName, nameWatcher } = data;
+    console.log(data);
+  },
+});
+
+chokidar.on.folderChanged({
+  apiKey: "my-api-key",
+  callback: (data) => {
+    const { path, eventName, nameWatcher } = data;
+    console.log(data);
+  },
+});
+
+chokidar.watchFile({
+  filePath: "./documents/demo.txt",
+  nameWatcher: "customNameWatcher",
+});
+
+chokidar.on.fileChanged({
+  callback: (data) => {
+    const { path, eventName, nameWatcher } = data;
+    console.log(data);
+  },
+});
+```
+
+In the renderer you can use:
+
+```ts
+globalThis.ipc.chokidar.send("watchFolder", {
+  folderPath: "./documents",
+  nameWatcher: "customNameWatcher",
+});
+
+globalThis.ipc.chokidar.receive("folderChanged", (data) => {
+  const { path, eventName, nameWatcher } = data;
+  console.log(data);
+});
+
+globalThis.ipc.chokidar.send("watchFile", {
+  filePath: "./documents/demo.txt",
+  nameWatcher: "customNameWatcher",
+});
+
+globalThis.ipc.chokidar.receive("fileChanged", (data) => {
+  const { path, eventName, nameWatcher } = data;
+  console.log(data);
+});
+```
+
+### API: Electron Side
+
+- `watchFolder` - Watch a folder. The response is sent to the `folderChanged` channel. The response is a `Changed` object.
+- `watchFile` - Watch a file. The response is sent to the `fileChanged` channel.The response is a `Changed` object.
+
+### API: Renderer Side - Request
+
+`watchFolder = async (options: { callback?: (arg0: Changed) => void; apiKey?: string; folderPath: string; nameWatcher: string; }): Promise<Changed>`
+
+example:
+
+```ts
+import chokidar from "@el3um4s/renderer-for-electron-chokidar";
+
+chokidar.watchFolder({
+  folderPath: "./documents",
+  nameWatcher: "customNameWatcher",
+  apiKey: "ipc",
+  callback: (data) => {
+    const { path, eventName, nameWatcher } = data;
+    console.log(data);
+  },
+});
+
+chokidar.watchFolder({
+  folderPath: "./downloads",
+  nameWatcher: "customNameWatcher",
+});
+```
+
+`watchFile = async (options: { callback?: (arg0: Changed) => void; apiKey?: string; folderPath: string; nameWatcher: string; }): Promise<Changed>`
+
+example:
+
+```ts
+import chokidar from "@el3um4s/renderer-for-electron-chokidar";
+
+chokidar.watchFile({
+  filePath: "./documents/demo.txt",
+  nameWatcher: "customNameWatcher",
+  apiKey: "ipc",
+  callback: (data) => {
+    const { path, eventName, nameWatcher } = data;
+    console.log(data);
+  },
+});
+
+chokidar.watchFile({
+  filePath: "./documents/list.csv",
+  nameWatcher: "customNameWatcher",
+});
+```
+
+### API: Renderer Side - Response
+
+`on.folderChanged = async (options: { callback?: (arg0: Changed) => void; apiKey?: string; }): Promise<Changed>`
+
+example:
+
+```ts
+import chokidar from "@el3um4s/renderer-for-electron-chokidar";
+
+chokidar.watchFolder({
+  folderPath: "./downloads",
+  nameWatcher: "customNameWatcher",
+});
+
+chokidar.on.folderChanged({
+  callback: (data) => {
+    const { path, eventName, nameWatcher } = data;
+    console.log(data);
+  },
+});
+```
+
+`on.fileChanged = async (options: { callback?: (arg0: Changed) => void; apiKey?: string; }): Promise<Changed>`
+
+example:
+
+```ts
+import chokidar from "@el3um4s/renderer-for-electron-chokidar";
+
+chokidar.watchFile({
+  filePath: "./documents/list.csv",
+  nameWatcher: "customNameWatcher",
+});
+
+chokidar.on.fileChanged({
+  callback: (data) => {
+    const { path, eventName, nameWatcher } = data;
+    console.log(data);
+  },
+});
+```
+
+### Types
+
+**Changed**
+
+```ts
+interface Changed {
+  path: string;
+  eventName: "add" | "change" | "unlink" | "addDir" | "unlinkDir";
+  nameWatcher: string;
+}
+```
+
+**DefaultApiKey**
+
+```ts
+type DefaultApiKey = "ipc";
 ```
