@@ -1,4 +1,4 @@
-# IPC for Electron: Chokidar (NOT YET TESTED)
+# IPC for Electron: Chokidar
 
 Allow the renderer to use [chokidar](https://www.npmjs.com/package/chokidar) (Minimal and efficient cross-platform file watching library)
 
