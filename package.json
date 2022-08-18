@@ -60,7 +60,7 @@
   },
   "homepage": "https://github.com/el3um4s/ipc-for-electron-chokidar#readme",
   "devDependencies": {
-    "@el3um4s/ipc-for-electron": "^1.0.2",
+    "@el3um4s/ipc-for-electron": "^1.0.4",
     "@el3um4s/to-try": "^0.0.8",
     "@types/jest": "^28.1.7",
     "@types/node": "^18.7.6",
