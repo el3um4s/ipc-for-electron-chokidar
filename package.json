@@ -1,6 +1,6 @@
 {
   "name": "@el3um4s/ipc-for-electron-chokidar",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Allow the renderer to use chokidar (Minimal and efficient cross-platform file watching library)",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
